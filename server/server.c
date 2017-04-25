@@ -1,7 +1,26 @@
+/*Program that runs the server for the game*/
 
+#include <stdio.h>
+#include <string.h>   //strlen
+#include <stdlib.h>
+#include <errno.h>
+#include <unistd.h>   //close
+#include <arpa/inet.h>    //close
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <sys/time.h> //FD_SET, FD_ISSET, FD_ZERO macros
+#include <curses.h>
+#include <stdint.h>
+#include <time.h>
+#include <unistd.h>
+#include <sys/select.h>
 
 //Global variables
-#define NUMBER_OF_PLAYERS 4
+#define NUMBER_OF_PLAYERS 2
+#define PORT 8888
+
+int running = 1;
 
 fd_set readfds;
 int max_clients = NUMBER_OF_PLAYERS;
@@ -9,8 +28,14 @@ int client_socket[NUMBER_OF_PLAYERS];
 
 int main(int argc, char** argv)
 {
-
-  int master_socket;
+  int opt = TRUE;
+  int master_socket, addrlen, new_socket;
+  int activity, i, valread, sd;
+  int max_sd;
+  int sd_last;
+  int has_stdin = 0;
+  int client_sock;
+  int connections = 0;
   
   struct sockaddr_in address;
   
