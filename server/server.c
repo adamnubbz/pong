@@ -53,7 +53,7 @@ int main(int argc, char** argv)
       exit(EXIT_FAILURE);
     }
 
-   //type of socket created
+  //type of socket created
   address.sin_family = AF_INET;
   address.sin_addr.s_addr = INADDR_ANY;
   address.sin_port = htons( PORT );
@@ -85,9 +85,67 @@ int main(int argc, char** argv)
       max_sd = master_socket;
       
       FD_SET(fileno(stdin), &readfds);
-      
+
+      //add sockets to readfds
+      for ( i = 0 ; i < max_clients ; i++) 
+        {
+          //socket descriptor
+          sd = client_socket[i];
+             
+          //if valid socket descriptor then add to read list
+          if(sd > 0)
+            FD_SET( sd , &readfds);
+             
+          //highest file descriptor number, need it for the select function
+          if(sd > max_sd)
+            max_sd = sd;
+        }
+
+      //wait for an activity on one of the sockets , timeout is NULL , so wait indefinitely
+      activity = select( max_sd + 1 , &readfds , NULL , NULL , NULL);
+    
+      if ((activity < 0) && (errno!=EINTR)) 
+        {
+          printf("select error");
+        }
+          
+      //If something happened on the master socket , then its an incoming connection
+      if (FD_ISSET(master_socket, &readfds)) 
+        {
+          if ((new_socket = accept(master_socket, (struct sockaddr *)&address, (socklen_t*)&addrlen))<0)
+            {
+              perror("accept");
+              exit(EXIT_FAILURE);
+            }
+
+         
+          //inform user of socket number - used in send and receive commands
+          printf("Player connected , socket fd is %d , ip is : %s , port : %d \n" , new_socket , inet_ntoa(address.sin_addr) , ntohs(address.sin_port));
+          connections++;
+
+                 
+          //add new socket to array of sockets
+          for (i = 0; i < max_clients; i++) 
+            {
+              //if position is empty
+              if( client_socket[i] == 0 )
+                {
+                  client_socket[i] = new_socket;
+                  if (connections < NUMBER_OF_PLAYERS)
+                    printf("Waiting for Player 2 to connect...\n");
+                     
+                  break;
+                }
+            }
+          //If we have right number of players, initialize game by initializing scheduler
+          if (connections == NUMBER_OF_PLAYERS)
+            //scheduler_init();//start scheduler
+            printf("Hello, game start!\n");
+        }
     }
 
-  
+  sleep(3);
+  //endwin();
   return 0;
 }
+
