@@ -20,6 +20,7 @@ int main(int argc , char *argv[])
   int socket_desc;
   struct sockaddr_in server;
   char message[1024];
+  char server_reply[1024];
   int max_sd;
   int server_sd, activity;
   int stdin_sd = fileno(stdin);
@@ -49,4 +50,24 @@ int main(int argc , char *argv[])
     }
     
   puts("Connected\n");
+
+  //Send some data
+  while(fgets(message, 100, stdin) != NULL){
+    if( send(socket_desc , message , strlen(message) , 0) < 0)
+      {
+        puts("Send failed");
+        return 1;
+      }
+    puts("Data Send\n");
+
+    //Receive a reply from the server
+    if( recv(socket_desc, server_reply , 2000 , 0) < 0)
+      {
+        puts("recv failed");
+      }
+    puts("Reply received\n");
+    puts(server_reply);
+  }
+
+  return 0;
 }
