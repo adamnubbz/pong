@@ -16,6 +16,7 @@
 #include <unistd.h>
 #include <sys/select.h>
 #include <netdb.h> //hostent
+#include <arpa/inet.h> // IP address
 
 //Global variables
 #define NUMBER_OF_PLAYERS 2
@@ -39,7 +40,8 @@ int main(int argc, char** argv)
   int connections = 0;
   
   struct sockaddr_in address;
-  char message[1024];
+  //char message[1024];
+	char* message;
 
   //create a master socket
   if( (master_socket = socket(AF_INET , SOCK_STREAM , 0)) == 0) 
@@ -67,6 +69,7 @@ int main(int argc, char** argv)
       exit(EXIT_FAILURE);
     }
   printf("Listener on port %d \n", PORT);
+	//printf("%s is the address.\n", inet_ntoa(address));
 
   //try to specify maximum of 3 pending connections for the master socket
   if (listen(master_socket, NUMBER_OF_PLAYERS + 1) < 0)
@@ -136,8 +139,7 @@ int main(int argc, char** argv)
                 {
                   client_socket[i] = new_socket;
                   if (connections < NUMBER_OF_PLAYERS)
-                    printf("Waiting for Player 2 to connect...\n");
-                     
+                    printf("Waiting for Player 2 to connect...\n");            
                   break;
                 }
             }
@@ -145,7 +147,21 @@ int main(int argc, char** argv)
           if (connections == NUMBER_OF_PLAYERS){
             //scheduler_init();//start scheduler
             printf("Hello, game start!\n");
-            
+            while(1){
+							for(i = 0; i < NUMBER_OF_PLAYERS; i++){
+								message = NULL;
+								if(recv(client_socket[i], message, 2000, 0) < 0){
+									puts("recv failed\n");
+								} else {
+									for(int j = 0; j < NUMBER_OF_PLAYERS; j++){
+										if(send(client_socket[j], message, strlen(message), 0) < 0){
+											puts("Send failed :(\n");
+										}
+									}
+								}
+								printf("message from player %d: %s\n", i, message);
+							}//for
+						}//while
           }
         }
     }
