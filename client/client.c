@@ -52,8 +52,8 @@ int main(int argc , char *argv[])
   puts("Connected\n");
 
   //Send some data
-  while(fgets(message, 100, stdin) != NULL){
-    if( send(socket_desc , message , strlen(message) , 0) < 0)
+  while(1){
+    if(fgets(message, 100, stdin) != NULL && send(socket_desc , message , strlen(message) , 0) < 0)
       {
         puts("Send failed");
         return 1;

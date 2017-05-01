@@ -39,7 +39,7 @@ int main(int argc, char** argv)
   int connections = 0;
   
   struct sockaddr_in address;
-  char message[1024];
+  char* message;
 
   //create a master socket
   if( (master_socket = socket(AF_INET , SOCK_STREAM , 0)) == 0) 
