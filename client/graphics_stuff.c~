@@ -1,0 +1,12 @@
+//main
+int main(int argc , char *argv[])
+{
+
+  // some connection stuff happens which we already have
+
+  //Initialize screen and ncurses
+  WINDOW* mainwin = initscr();
+  noecho();               // Don't print keys when pressed
+  keypad(mainwin, true);  // Support arrow keys
+  timeout(0);
+  init_display();
