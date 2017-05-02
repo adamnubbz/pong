@@ -52,13 +52,12 @@ int main(int argc , char *argv[])
   puts("Connected\n");
 
   //Send some data
-<<<<<<< HEAD
-	
  	while(1){
     if(fgets(message, 100, stdin) != NULL && send(socket_desc , message , strlen(message) , 0) < 0){
     	puts("Send failed");
     	return 1;
     } else {
+			message[strlen(message)] = '\0';
     	puts("Data Send\n");
 			printf("Message = %s\n", message);
 		}
@@ -70,25 +69,8 @@ int main(int argc , char *argv[])
     	puts("recv failed");
     } else {
     	puts("Reply received\n");
+    	puts(server_reply);
 		}
-		puts("\t");
-=======
-  while(1){
-    if(fgets(message, 100, stdin) != NULL && send(socket_desc , message , strlen(message) , 0) < 0)
-      {
-        puts("Send failed");
-        return 1;
-      }
-    puts("Data Send\n");
-
-    //Receive a reply from the server
-    if( recv(socket_desc, server_reply , 2000 , 0) < 0)
-      {
-        puts("recv failed");
-      }
-    puts("Reply received\n");
->>>>>>> bcc8031ac2569f705aa64f84dd874afd1c954bfd
-    puts(server_reply);
   }
 
   return 0;

@@ -40,12 +40,7 @@ int main(int argc, char** argv)
   int connections = 0;
   
   struct sockaddr_in address;
-<<<<<<< HEAD
-  //char message[1024];
-	char* message;
-=======
-  char* message;
->>>>>>> bcc8031ac2569f705aa64f84dd874afd1c954bfd
+  char message[2000];
 
   //create a master socket
   if( (master_socket = socket(AF_INET , SOCK_STREAM , 0)) == 0) 
@@ -132,8 +127,8 @@ int main(int argc, char** argv)
           printf("Player connected , socket fd is %d , ip is : %s , port : %d \n" , new_socket , inet_ntoa(address.sin_addr) , ntohs(address.sin_port));
           connections++;
           //Reply to the client
-          message = "Hello Client , I have received your connection. But I have to go now, bye\n";
-          write(new_socket , message , strlen(message));
+          char* greeting = "Hello Client , I have received your connection. But I have to go now, bye\n";
+          write(new_socket , greeting , strlen(greeting));
                  
           //add new socket to array of sockets
           for (i = 0; i < max_clients; i++) 
@@ -153,10 +148,11 @@ int main(int argc, char** argv)
             printf("Hello, game start!\n");
             while(1){
 							for(i = 0; i < NUMBER_OF_PLAYERS; i++){
-								message = NULL;
 								if(recv(client_socket[i], message, 2000, 0) < 0){
-									puts("recv failed\n");
+									perror("recv failed");
+									printf("%d is the errno\n", errno);
 								} else {
+									message[strlen(message)] = '\0';
 									for(int j = 0; j < NUMBER_OF_PLAYERS; j++){
 										if(send(client_socket[j], message, strlen(message), 0) < 0){
 											puts("Send failed :(\n");
