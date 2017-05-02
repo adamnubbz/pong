@@ -53,20 +53,24 @@ int main(int argc , char *argv[])
 
   //Send some data
   while(1){
-    if(fgets(message, 100, stdin) != NULL && send(socket_desc , message , strlen(message) , 0) < 0)
-      {
-        puts("Send failed");
-        return 1;
-      }
-    puts("Data Send\n");
-
+    
     //Receive a reply from the server
     if( recv(socket_desc, server_reply , 2000 , 0) < 0)
       {
         puts("recv failed");
       }
-    puts("Reply received\n");
-    puts(server_reply);
+    else{
+      puts("Reply received\n");
+      puts(server_reply);
+    }
+
+    // Send message to server
+    if(fgets(message, 100, stdin) != NULL && send(socket_desc , message , strlen(message) , 0) < 0)
+      {
+        puts("Send failed");
+        return 1;
+      }
+    else{puts("Data Sent\n");}
   }
 
   return 0;
