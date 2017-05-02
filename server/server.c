@@ -40,8 +40,12 @@ int main(int argc, char** argv)
   int connections = 0;
   
   struct sockaddr_in address;
+<<<<<<< HEAD
   //char message[1024];
 	char* message;
+=======
+  char* message;
+>>>>>>> bcc8031ac2569f705aa64f84dd874afd1c954bfd
 
   //create a master socket
   if( (master_socket = socket(AF_INET , SOCK_STREAM , 0)) == 0) 
