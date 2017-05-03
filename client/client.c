@@ -53,23 +53,28 @@ int main(int argc , char *argv[])
 
   //Send some data
  	while(1){
-    if(fgets(message, 100, stdin) != NULL && send(socket_desc , message , strlen(message) , 0) < 0){
+    if(fgets(message, 100, stdin) == NULL){
+			puts("Input failed");
+			return 1;
+		}	else if(send(socket_desc , message ,strlen(message) * sizeof(message) , 0) < 0){
     	puts("Send failed");
     	return 1;
     } else {
 			message[strlen(message)] = '\0';
-    	puts("Data Send\n");
+    	puts("Data Send");
 			printf("Message = %s\n", message);
 		}
-		if (strcmp(message, "exit") == 0){
+		if (strcmp(message, "exit\n") == 0){
+			printf("EXITING\n");
 			return 0;
 		}
 		//Receive a reply from the server
-    if(recv(socket_desc, server_reply , 2000 , 0) < 0){
+		memset(server_reply, 0, sizeof(server_reply));;
+    if(recv(socket_desc, server_reply, sizeof(server_reply), 0) < 0){
     	puts("recv failed");
     } else {
-    	puts("Reply received\n");
-    	puts(server_reply);
+    	puts("Reply received");
+    	printf("received %s\n", server_reply);
 		}
   }
 

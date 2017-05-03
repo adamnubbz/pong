@@ -128,7 +128,7 @@ int main(int argc, char** argv)
           connections++;
           //Reply to the client
           char* greeting = "Hello Client , I have received your connection. But I have to go now, bye\n";
-          write(new_socket , greeting , strlen(greeting));
+          send(new_socket , greeting , strlen(greeting), 0);
                  
           //add new socket to array of sockets
           for (i = 0; i < max_clients; i++) 
@@ -148,12 +148,14 @@ int main(int argc, char** argv)
             printf("Hello, game start!\n");
             while(1){
 							for(i = 0; i < NUMBER_OF_PLAYERS; i++){
+								memset(message, 0, sizeof(message));
 								if(recv(client_socket[i], message, 2000, 0) < 0){
 									perror("recv failed");
 									printf("%d is the errno\n", errno);
 								} else {
 									message[strlen(message)] = '\0';
 									for(int j = 0; j < NUMBER_OF_PLAYERS; j++){
+										printf("sending %s to client %d\n", message, j);
 										if(send(client_socket[j], message, strlen(message), 0) < 0){
 											puts("Send failed :(\n");
 										}
