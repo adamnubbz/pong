@@ -17,6 +17,7 @@
 #include <sys/select.h>
 #include <netdb.h> //hostent
 #include <arpa/inet.h> // IP address
+#include <pthread.h>
 
 //Global variables
 #define NUMBER_OF_PLAYERS 2
@@ -27,6 +28,34 @@ int running = 1;
 fd_set readfds;
 int max_clients = NUMBER_OF_PLAYERS;
 int client_socket[NUMBER_OF_PLAYERS];
+
+typedef struct thread_args {
+  int* sockets;
+  int index;
+} thread_args_t;
+
+void* read_sockets(void* args){
+  char server_reply[1024];
+  int* sockets = ((thread_args_t*) args)->sockets;
+  int index = ((thread_args_t*) args)->index; 
+
+  //Receive a reply from the server
+  while(1){
+    if(recv(sockets[index], server_reply , 1024, 0) < 0){
+      puts("recv failed");
+    } else {
+      for(int i = 0; i < NUMBER_OF_PLAYERS; i++){
+        //send to all sockets that the message was not received from
+        if(i != index){
+          if(send(sockets[i], server_reply, 1024, 0) < 0){
+            perror("Send failed");
+          }
+        }
+      }
+      memset(server_reply, 0, 1024);
+    }
+  }
+}
 
 int main(int argc, char** argv)
 {
@@ -68,7 +97,7 @@ int main(int argc, char** argv)
       exit(EXIT_FAILURE);
     }
   printf("Listener on port %d \n", PORT);
-	//printf("%s is the address.\n", inet_ntoa(address));
+  //printf("%s is the address.\n", inet_ntoa(address));
 
   //try to specify maximum of 3 pending connections for the master socket
   if (listen(master_socket, NUMBER_OF_PLAYERS + 1) < 0)
@@ -146,22 +175,22 @@ int main(int argc, char** argv)
           if (connections == NUMBER_OF_PLAYERS){
             //scheduler_init();//start scheduler
             printf("Hello, game start!\n");
-            while(1){
-							for(i = 0; i < NUMBER_OF_PLAYERS; i++){
-								if(recv(client_socket[i], message, 2000, 0) < 0){
-									perror("recv failed");
-									printf("%d is the errno\n", errno);
-								} else {
-									message[strlen(message)] = '\0';
-									for(int j = 0; j < NUMBER_OF_PLAYERS; j++){
-										if(send(client_socket[j], message, strlen(message), 0) < 0){
-											puts("Send failed :(\n");
-										}
-									}
-								}
-								printf("message from player %d: %s\n", i, message);
-							}//for
-						}//while
+            pthread_t threads[NUMBER_OF_PLAYERS];
+            thread_args_t args[NUMBER_OF_PLAYERS];
+            for(int j = 0; j < NUMBER_OF_PLAYERS; j++){
+              args[j].sockets = client_socket;
+              args[j].index = j;
+              if(pthread_create(&threads[j], NULL, read_sockets, &args[j]) != 0){
+                perror("Error creating thread 1");
+                exit(2);
+              }
+            }
+            for(int j = 0; j < NUMBER_OF_PLAYERS; j++){
+              if(pthread_join(threads[j], NULL) != 0) {
+                perror("Error joining with thread");
+                exit(2);
+              }
+            }//while  
           }
         }
     }

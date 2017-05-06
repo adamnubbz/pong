@@ -12,6 +12,39 @@
 #include <netinet/in.h>
 #include <sys/time.h>
 #include <time.h>
+  
+void* read_sockets(void* args){
+  char server_reply[1024];
+  int* socket = (int*) args;
+  //Receive a reply from the server
+  while(1){
+    if(recv(*socket, server_reply , 1024, 0) < 0){
+      puts("recv failed");
+    } else {
+      puts(server_reply);
+      memset(server_reply, 0, 1024);
+    }
+  }
+}
+
+void* write_sockets(void* args){
+  char message[1024];
+  int* socket = (int*) args;
+  //Send some data
+  while(1){
+    if(fgets(message, 100, stdin) != NULL){
+      if(send(*socket, message , 1024*sizeof(message), 0) < 0){
+        perror("Send failed");
+      }
+      else {
+        memset(message, 0, 1024);
+      }
+    }
+    if (strcmp(message, "exit") == 0){
+      break;
+    }
+  }
+}
 
 //main
 int main(int argc , char *argv[])
@@ -51,27 +84,27 @@ int main(int argc , char *argv[])
     
   puts("Connected\n");
 
-  //Send some data
- 	while(1){
-    if(fgets(message, 100, stdin) != NULL && send(socket_desc , message , strlen(message) , 0) < 0){
-    	puts("Send failed");
-    	return 1;
-    } else {
-			message[strlen(message)] = '\0';
-    	puts("Data Send\n");
-			printf("Message = %s\n", message);
-		}
-		if (strcmp(message, "exit") == 0){
-			return 0;
-		}
-		//Receive a reply from the server
-    if(recv(socket_desc, server_reply , 2000 , 0) < 0){
-    	puts("recv failed");
-    } else {
-    	puts("Reply received\n");
-    	puts(server_reply);
-		}
+  pthread_t threads[2];
+
+  if(pthread_create(&threads[0], NULL, read_sockets, &socket_desc) != 0){
+    perror("Error creating thread 1");
+    exit(2);
   }
+
+  if(pthread_create(&threads[1], NULL, write_sockets, &socket_desc) != 0){
+    perror("Error creating thread 2");
+    exit(2);
+  }
+
+  if(pthread_join(threads[0], NULL) != 0) {
+    perror("Error joining with thread 1");
+    exit(2);
+  }
+
+  if(pthread_join(threads[1], NULL) != 0) {
+    perror("Error joining with thread 1");
+    exit(2);
+  }  
 
   return 0;
 }
