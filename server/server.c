@@ -157,7 +157,7 @@ int main(int argc, char** argv)
           connections++;
           //Reply to the client
           char* greeting = "Hello Client , I have received your connection. But I have to go now, bye\n";
-          write(new_socket , greeting , strlen(greeting));
+          send(new_socket , greeting , strlen(greeting), 0);
                  
           //add new socket to array of sockets
           for (i = 0; i < max_clients; i++) 
@@ -190,7 +190,7 @@ int main(int argc, char** argv)
                 perror("Error joining with thread");
                 exit(2);
               }
-            }//while  
+            } 
           }
         }
     }
