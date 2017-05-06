@@ -1,10 +1,24 @@
 typedef struct{
-  vec2d player1;
-  vec2d player2;
-  vec2d ball;
-  vec2d ball_dir;
+  vec2d pos;
+  rgb32 col;
+  //bool vert // if 4 players, vert determines whether paddle is vert or hori
+} player_info;
+
+typedef struct{
+  vec2d pos;
+  vec2d dir;
+  float radius;
+  rgb32 col;
+} ball_info
+
+typedef struct{
+  player_info players[];
+  ball_info ball;
   //scores?
 } game_state;
+
+#define PADDLE_WIDTH 10
+#define PADDLE_HEIGHT 50
 
 //main
 int main(int argc , char *argv[])
@@ -17,6 +31,7 @@ int main(int argc , char *argv[])
   int server_sd, activity;
   int stdin_sd = fileno(stdin);
   fd_set readfds;
+  game_state* game = (game_state*) malloc(sizeof(game_state));
   
   // some connection stuff happens which we already have
 
@@ -60,9 +75,17 @@ int main(int argc , char *argv[])
       keystroke_ts[2] = '\0';
       send(socket_desc, keystroke_ts, strlen(keystroke_ts) , 0);
     }
-    // send and receive structs that hold game state information (paddle location, ball location & direction, etc)
+    // send keystroke information to server, receive updated game_state from
+    // server (server does the updating)
+
+    // Charlie, how do I receive a game_state from the server? Aka, how do
+    // I receive the array, parse it, and update the game_state for the client
+
+    // will probably need something of the form:
+    // updateGame(receivedmessage, game);
 
     // Update bmp based on received game_state information
+    drawPaddles(bmp, game);
     
     // Mark actions and update positions (button presses and paddles move)
     
@@ -88,14 +111,8 @@ char read_input(int socket) {
   if(key == KEY_UP) {
     key_ts = 'w';
     is_valid_key = 1;
-  } else if(key == KEY_RIGHT) {
-    key_ts = 'd';
-    is_valid_key = 1;
   } else if(key == KEY_DOWN) {
     key_ts = 's';
-    is_valid_key = 1;
-  } else if(key == KEY_LEFT) {
-    key_ts = 'a';
     is_valid_key = 1;
   } else if(key == 'q') {
     key_ts = 'q';
@@ -108,3 +125,44 @@ char read_input(int socket) {
   else
     return -50;
 }//read_input
+
+
+void drawGame(bitmap* bmp, game_state* game) {
+
+  // Draw the paddles
+  int i = 0;
+  for(i; i < 2; i++){
+    rgb32 color = game.players[i].col;
+    float x_coord = game.players[i].pos.x();
+    float max_x_coord = x_coord + PADDLE_WIDTH;
+    for(x_coord; x_coord < max_x_coord; x_coord++){
+      float y_coord = game.players[i].pos.y();
+      float max_y_coord = y_coord + PADDLE_HEIGHT;
+      for(y_coord; y_coord < max_y_coord; y_coord++){
+        bmp->set(x_coord, y_coord, color);
+      }
+    }
+  }
+  
+  // Draw the ball
+  float center_x = game.ball.pos.x();
+  float center_y = game.ball.pos.y();
+  float radius = game.ball.radius();
+  rgb32 color = game.ball.col;
+  
+  // Loop over points in the upper-right quadrant of the circle
+  for(float x = 0; x <= radius*1.1; x++) {
+    for(float y = 0; y <= radius*1.1; y++) {
+      // Is this point within the circle's radius?
+      float dist = sqrt(pow(x, 2) + pow(y, 2));
+      if(dist < radius) {
+        // Set this point, along with the mirrored points in the other three quadrants
+        bmp->set(center_x + x + x_offset, center_y + y + y_offset, color);
+        bmp->set(center_x + x + x_offset, center_y - y + y_offset, color);
+        bmp->set(center_x - x + x_offset, center_y - y + y_offset, color);
+        bmp->set(center_x - x + x_offset, center_y + y + y_offset, color);
+      }
+    }
+  }
+}
+  
