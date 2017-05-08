@@ -11,26 +11,21 @@
 #include <netinet/in.h>
 #include <sys/time.h>
 #include <time.h>
+
+// Libraries from Charlie's Galaxy Lab
+#include <cmath>
+#include <cstdio>
+#include <ctime>
+#include <vector>
+#include <pthread.h>
+#include <stdio.h>
+
+#include <SDL.h>
+
 #include "bitmap.hh"
-
-typedef struct{
-  vec2d pos;
-  rgb32 col;
-  //bool vert // if 4 players, vert determines whether paddle is vert or hori
-} player_info;
-
-typedef struct{
-  vec2d pos;
-  vec2d dir;
-  float radius;
-  rgb32 col;
-} ball_info
-
-typedef struct{
-  player_info players[];
-  ball_info ball;
-  //scores?
-} game_state;
+#include "gui.hh"
+#include "util.hh"
+#include "vec2d.hh"
 
 // Paddle size
 #define PADDLE_WIDTH 10
@@ -40,10 +35,30 @@ typedef struct{
 #define WIDTH 800
 #define HEIGHT 600
 
-rgb32 gray;
-gray.rgbRed = 50;
-gray.rgbGreen = 50;
-gray.rgbBlue = 50;
+typedef struct{
+  vec2d pos;
+  rgb32 color;
+} player_info;
+
+typedef struct{
+  vec2d pos;
+  vec2d dir;
+  float radius;
+  rgb32 col;
+} ball_info;
+
+typedef struct{
+  player_info players[2];
+  ball_info ball;
+  //scores?
+} game_state;
+
+void initGame(game_state* game);
+void drawGame(bitmap* bmp, game_state* game);
+char read_input(int socket);
+
+rgb32 gray = {100, 100, 100};
+bool running = true;
 
 //main
 int main(int argc , char *argv[])
@@ -57,20 +72,28 @@ int main(int argc , char *argv[])
   int stdin_sd = fileno(stdin);
   fd_set readfds;
   game_state* game = (game_state*) malloc(sizeof(game_state));
+  initGame(game);
   
   // some connection stuff happens which we already have
 
-
   // Create a GUI window
   gui ui("Pong Game!", WIDTH, HEIGHT);
-
-  // need to generate paddles before or after generating bmp?
   
   // Render everything using this bitmap
   bitmap bmp(WIDTH, HEIGHT);
 
+  game_state* receivedmessage = (game_state*) malloc(sizeof(game_state));
+
   while(running) {
-    game_state receivedmessage;
+    // Process events
+    SDL_Event event;
+    while(SDL_PollEvent(&event) == 1) {
+      // If the event is a quit event, then leave the loop
+      if(event.type == SDL_QUIT) running = false;
+    }
+    
+    // Get the keyboard state
+    const uint8_t* keyboard = SDL_GetKeyboardState(NULL);
 
     FD_ZERO(&readfds);
       
@@ -81,26 +104,7 @@ int main(int argc , char *argv[])
     FD_SET(socket_desc, &readfds);
     if(socket_desc > max_sd)
       max_sd = socket_desc;
-
-     //wait for an activity on one of the sockets , timeout is NULL , so wait indefinitely
-    activity = select( max_sd + 1 , &readfds , NULL , NULL , NULL);
-
-    //error check for select
-    if ((activity < 0) && (errno!=EINTR)) 
-      {
-        printf("select error");
-      }
     
-    //Check for keystrokes and send to server
-    char keystroke = read_input(socket_desc);
-    
-    if(keystroke != -50){
-      char keystroke_ts[3];
-      keystroke_ts[0] = keystroke;            
-      keystroke_ts[1] = '\n';
-      keystroke_ts[2] = '\0';
-      send(socket_desc, keystroke_ts, strlen(keystroke_ts) , 0);
-    }
     // send keystroke information to server, receive updated game_state from
     // server (server does the updating)
 
@@ -108,12 +112,10 @@ int main(int argc , char *argv[])
     // I receive the array, parse it, and update the game_state for the client
 
     // will probably need something of the form:
-    game = recv(*socket,receivedmessage,sizeof(receivedmessage),0);
+    //game = recv(*socket, receivedmessage, sizeof(receivedmessage),0);
 
     // Update bmp based on received game_state information
-    drawPaddles(bmp, game);
-    
-    // Mark actions and update positions (button presses and paddles move)
+    drawGame(&bmp, game);
     
     // Darken the bitmap instead of clearing it to leave trails
     bmp.darken(0.92);
@@ -124,67 +126,37 @@ int main(int argc , char *argv[])
   return 0;
 }//main
 
-
-
-
-//Reads key pressed and returns it as char
-//If no key was pressed, or if a key was pressed that wasn't an arrow key, function
-//returns -50;
-char read_input(int socket) {
-  int key = getch();
-  char key_ts;
-  int is_valid_key = 0;
-  if(key == KEY_UP) {
-    key_ts = 'w';
-    is_valid_key = 1;
-  } else if(key == KEY_DOWN) {
-    key_ts = 's';
-    is_valid_key = 1;
-  } else if(key == 'q') {
-    key_ts = 'q';
-    is_valid_key = 1;
-  }
-
-  if(is_valid_key == 1){
-    return key_ts;
-  }
-  else
-    return -50;
-}//read_input
-
-
 void drawGame(bitmap* bmp, game_state* game) {
-  // Draw the borders
-  float y = 50;
-  float x = 50;
-  for(y; y < 60; y++){
-    for(x; x < 300; x++){
-      bmp->set(x, y, gray);
+  for(float x = 0; x < WIDTH; x++){
+    for(float y = 0; y < HEIGHT; y++){
+        bmp->set(x, y, {0, 0, 0});
     }
   }
-  y = 200;
-  x = 50;
-  for(y; y < 210; y++){
-    for(x; x < 300; x++){
-       bmp->set(x, y, gray);
+      
+  
+  // Draw the borders
+  for(float y = 50; y < 70; y++){
+    for(float x = 50; x < 750; x++){
+      bmp->set(x, y, gray);
+      bmp->set(x, (y + 475), gray);
     }
   }
   
   // Draw the paddles
   int i = 0;
-  for(i; i < 2; i++){
-    rgb32 color = game.players[i].col;
-    float x_coord = game.players[i].pos.x();
+  for(; i < 2; i++){
+    rgb32 color = game->players[i].color;
+    float x_coord = game->players[i].pos.x();
     float max_x_coord = x_coord + PADDLE_WIDTH;
-    for(x_coord; x_coord < max_x_coord; x_coord++){
-      float y_coord = game.players[i].pos.y();
+    for(; x_coord < max_x_coord; x_coord++){
+      float y_coord = game->players[i].pos.y();
       float max_y_coord = y_coord + PADDLE_HEIGHT;
-      for(y_coord; y_coord < max_y_coord; y_coord++){
+      for(; y_coord < max_y_coord; y_coord++){
         bmp->set(x_coord, y_coord, color);
       }
     }
   }
-  
+  /*
   // Draw the ball
   float center_x = game.ball.pos.x();
   float center_y = game.ball.pos.y();
@@ -205,6 +177,14 @@ void drawGame(bitmap* bmp, game_state* game) {
       }
     }
   }
+  */
+}
+
+void initGame(game_state* game){
+  game->players[0].pos = vec2d(50, 100);
+  game->players[0].color = {255, 50, 50};
+  game->players[1].pos = vec2d(300, 100);
+  game->players[1].color = {50, 50, 255};
 }
   
   
