@@ -1,3 +1,18 @@
+#include <curses.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>   //strlen
+#include <stdlib.h>
+#include <errno.h>
+#include <unistd.h>   //close
+#include <arpa/inet.h>    //close
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <sys/time.h>
+#include <time.h>
+#include "bitmap.hh"
+
 typedef struct{
   vec2d pos;
   rgb32 col;
@@ -20,6 +35,11 @@ typedef struct{
 #define PADDLE_WIDTH 10
 #define PADDLE_HEIGHT 50
 
+rgb32 gray;
+gray.rgbRed = 50;
+gray.rgbGreen = 50;
+gray.rgbBlue = 50;
+
 //main
 int main(int argc , char *argv[])
 {
@@ -37,7 +57,7 @@ int main(int argc , char *argv[])
 
 
   // Create a GUI window
-  gui ui("Galaxy Simulation", WIDTH, HEIGHT);
+  gui ui("Pong Game!", WIDTH, HEIGHT);
 
   // need to generate paddles before or after generating bmp?
   
@@ -45,6 +65,7 @@ int main(int argc , char *argv[])
   bitmap bmp(WIDTH, HEIGHT);
 
   while(running) {
+    game_state receivedmessage;
 
     FD_ZERO(&readfds);
       
@@ -82,7 +103,7 @@ int main(int argc , char *argv[])
     // I receive the array, parse it, and update the game_state for the client
 
     // will probably need something of the form:
-    // updateGame(receivedmessage, game);
+    game = recv(*socket,receivedmessage,sizeof(receivedmessage),0);
 
     // Update bmp based on received game_state information
     drawPaddles(bmp, game);
@@ -128,7 +149,22 @@ char read_input(int socket) {
 
 
 void drawGame(bitmap* bmp, game_state* game) {
-
+  // Draw the borders
+  float y = 50;
+  float x = 50;
+  for(y; y < 60; y++){
+    for(x; x < 300; x++){
+      bmp->set(x, y, gray);
+    }
+  }
+  y = 200;
+  x = 50;
+  for(y; y < 210; y++){
+    for(x; x < 300; x++){
+       bmp->set(x, y, gray);
+    }
+  }
+  
   // Draw the paddles
   int i = 0;
   for(i; i < 2; i++){
@@ -165,4 +201,5 @@ void drawGame(bitmap* bmp, game_state* game) {
     }
   }
 }
+  
   
