@@ -25,7 +25,7 @@
 
 typedef struct{
 	vec2d pos;
-	rgb32 col;
+	rgb32 color;
 } player_info;
 
 typedef struct{
