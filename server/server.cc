@@ -41,7 +41,8 @@ game_state* GAME = (game_state*) malloc(sizeof(game_state));
 void* read_sockets(void* args){
   char server_reply[3];
   int* sockets = ((thread_args_t*) args)->sockets;
-  int index = ((thread_args_t*) args)->index; 
+  int index = ((thread_args_t*) args)->index;
+  vec2d vec = vec2d(0,3);
 
   //Recieve messages from clients
   while(1){
@@ -49,9 +50,9 @@ void* read_sockets(void* args){
       puts("recv failed");
     } else {
       if(server_reply[0] == 'w'){
-        GAME->players[index].pos += 3; // FIXM THIS SO IT CHANGES COORDINATES
+        GAME->players[index].pos += vec;
       } else if (server_reply[0] == 's'){
-        GAME->players[index].pos -= 3; // THIS ONE TOO
+        GAME->players[index].pos -= vec;
       } else {
         printf("INVALID\n");
       }
