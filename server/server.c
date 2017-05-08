@@ -17,6 +17,7 @@
 #include <sys/select.h>
 #include <netdb.h> //hostent
 #include <arpa/inet.h> // IP address
+#include "../structs.h"
 #include <pthread.h>
 
 //Global variables
@@ -34,28 +35,38 @@ typedef struct thread_args {
   int index;
 } thread_args_t;
 
+// THE GAME(state)
+game_state GAME = (game_state) malloc(sizeof(game_state));
+
 void* read_sockets(void* args){
-  char server_reply[1024];
+  char server_reply[3];
   int* sockets = ((thread_args_t*) args)->sockets;
   int index = ((thread_args_t*) args)->index; 
 
   //Receive a reply from the server
   while(1){
-    if(recv(sockets[index], server_reply , 1024, 0) < 0){
+    if(recv(sockets[index], server_reply , sizeof(char) * 3, 0) < 0){
       puts("recv failed");
     } else {
+			if(strcmp(server_reply[0], "w") == 0){
+				GAME.players[index].pos += 3;
+			} else if (strcmp(server_reply[0], "s") == 0){
+				GAME.players[index].pos -= 3;
+			} else {
+				printf("INVALID\n");
+			}
       for(int i = 0; i < NUMBER_OF_PLAYERS; i++){
         //send to all sockets that the message was not received from
-        if(i != index){
-          if(send(sockets[i], server_reply, 1024, 0) < 0){
+        if(send(sockets[i], GAME, sizeof(game_state), 0) < 0){
             perror("Send failed");
-          }
         }
       }
-      memset(server_reply, 0, 1024);
     }
+    memset(server_reply, 0, 3);
   }
 }
+
+
 
 int main(int argc, char** argv)
 {
@@ -86,6 +97,7 @@ int main(int argc, char** argv)
     }
 
   //type of socket created
+									printf("%d is mes_len\n", mes_len);
   address.sin_family = AF_INET;
   address.sin_addr.s_addr = INADDR_ANY;
   address.sin_port = htons( PORT );

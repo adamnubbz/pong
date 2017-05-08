@@ -12,37 +12,33 @@
 #include <netinet/in.h>
 #include <sys/time.h>
 #include <time.h>
-  
+#include "../structs.h"
+ 
+typedef struct{
+	int socket;
+	char message[3];
+} thread_args;
+
 void* read_sockets(void* args){
-  char server_reply[1024];
+  game_state server_reply;
   int* socket = (int*) args;
   //Receive a reply from the server
   while(1){
-    if(recv(*socket, server_reply , 1024, 0) < 0){
+    if(recv(*socket, server_reply , sizeof(game_state), 0) < 0){
       puts("recv failed");
     } else {
-      puts(server_reply);
-      memset(server_reply, 0, 1024);
+      //draw(server_reply); //how do
     }
   }
 }
 
 void* write_sockets(void* args){
-  char message[1024];
-  int* socket = (int*) args;
+  int* socket = (int*)((thread_args*)args).socket;
+  char message[3] = (char*)((thread_args*)args).message;
   //Send some data
-  while(1){
-    if(fgets(message, 100, stdin) != NULL){
-      if(send(*socket, message , 1024*sizeof(message), 0) < 0){
-        perror("Send failed");
-      }
-      else {
-        memset(message, 0, 1024);
-      }
-    }
-    if (strcmp(message, "exit") == 0){
-      break;
-    }
+  	if(send(*socket, message , 3*sizeof(char), 0) < 0){
+    	perror("Send failed");
+  	}
   }
 }
 
@@ -85,13 +81,16 @@ int main(int argc , char *argv[])
   puts("Connected\n");
 
   pthread_t threads[2];
-
+	thread_args t_args = (thread_args) malloc(sizeof(thread_args));
+	t_args.socket = socket_desc;
+	//assign message here
+	
   if(pthread_create(&threads[0], NULL, read_sockets, &socket_desc) != 0){
     perror("Error creating thread 1");
     exit(2);
   }
 
-  if(pthread_create(&threads[1], NULL, write_sockets, &socket_desc) != 0){
+  if(pthread_create(&threads[1], NULL, write_sockets, &t_args) != 0){
     perror("Error creating thread 2");
     exit(2);
   }
