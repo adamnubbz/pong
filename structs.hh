@@ -1,5 +1,5 @@
-#ifndef STRUCTS_H
-#define STRUCTS_H
+#ifndef STRUCTS_HH
+#define STRUCTS_HH
 
 #include <stdio.h>
 #include <string.h>   //strlen
@@ -20,6 +20,9 @@
 #include <arpa/inet.h> // IP address
 #include <pthread.h>
 
+#include "client/vec2d.hh"
+#include "client/bitmap.hh"
+
 typedef struct{
 	vec2d pos;
 	rgb32 col;
@@ -33,7 +36,7 @@ typedef struct{
 } ball_info;
 
 typedef struct{
-	player_info players[];
+	player_info players[2];
 	ball_info ball;
 } game_state;
 

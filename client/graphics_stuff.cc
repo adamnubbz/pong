@@ -24,7 +24,7 @@ typedef struct{
   vec2d dir;
   float radius;
   rgb32 col;
-} ball_info
+} ball_info;
 
 typedef struct{
   player_info players[];

@@ -12,7 +12,7 @@
 #include <netinet/in.h>
 #include <sys/time.h>
 #include <time.h>
-#include "../structs.h"
+#include "../structs.hh"
  
 typedef struct{
 	int socket;
@@ -36,11 +36,11 @@ void* write_sockets(void* args){
   int* socket = (int*)((thread_args*)args).socket;
   char message[3] = (char*)((thread_args*)args).message;
   //Send some data
-  	if(send(*socket, message , 3*sizeof(char), 0) < 0){
-    	perror("Send failed");
-  	}
+  if(send(*socket, message , 3*sizeof(char), 0) < 0){
+    perror("Send failed");
   }
 }
+
 
 //main
 int main(int argc , char *argv[])

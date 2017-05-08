@@ -1,2 +1,6 @@
-client: client.c
-	gcc -pthread -lncurses -o client client.c
+ROOT     := .
+TARGETS  := client
+CXXFLAGS := `sdl2-config --cflags` -g -O2 --std=c++11
+LDFLAGS  := `sdl2-config --libs` -lpthread
+
+include $(ROOT)/common.mk

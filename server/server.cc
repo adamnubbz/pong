@@ -17,7 +17,7 @@
 #include <sys/select.h>
 #include <netdb.h> //hostent
 #include <arpa/inet.h> // IP address
-#include "../structs.h"
+#include "../structs.hh"
 #include <pthread.h>
 
 //Global variables
@@ -36,29 +36,29 @@ typedef struct thread_args {
 } thread_args_t;
 
 // THE GAME(state)
-game_state GAME = (game_state) malloc(sizeof(game_state));
+game_state* GAME = (game_state*) malloc(sizeof(game_state));
 
 void* read_sockets(void* args){
   char server_reply[3];
   int* sockets = ((thread_args_t*) args)->sockets;
   int index = ((thread_args_t*) args)->index; 
 
-  //Receive a reply from the server
+  //Recieve messages from clients
   while(1){
     if(recv(sockets[index], server_reply , sizeof(char) * 3, 0) < 0){
       puts("recv failed");
     } else {
-			if(strcmp(server_reply[0], "w") == 0){
-				GAME.players[index].pos += 3;
-			} else if (strcmp(server_reply[0], "s") == 0){
-				GAME.players[index].pos -= 3;
-			} else {
-				printf("INVALID\n");
-			}
+      if(server_reply[0] == 'w'){
+        GAME->players[index].pos += 3; // FIXM THIS SO IT CHANGES COORDINATES
+      } else if (server_reply[0] == 's'){
+        GAME->players[index].pos -= 3; // THIS ONE TOO
+      } else {
+        printf("INVALID\n");
+      }
       for(int i = 0; i < NUMBER_OF_PLAYERS; i++){
-        //send to all sockets that the message was not received from
+        //send to all sockets
         if(send(sockets[i], GAME, sizeof(game_state), 0) < 0){
-            perror("Send failed");
+          perror("Send failed");
         }
       }
     }
@@ -97,7 +97,6 @@ int main(int argc, char** argv)
     }
 
   //type of socket created
-									printf("%d is mes_len\n", mes_len);
   address.sin_family = AF_INET;
   address.sin_addr.s_addr = INADDR_ANY;
   address.sin_port = htons( PORT );
@@ -168,7 +167,7 @@ int main(int argc, char** argv)
           printf("Player connected , socket fd is %d , ip is : %s , port : %d \n" , new_socket , inet_ntoa(address.sin_addr) , ntohs(address.sin_port));
           connections++;
           //Reply to the client
-          char* greeting = "Hello Client , I have received your connection. But I have to go now, bye\n";
+          char greeting[] = "Hello Client , I have received your connection. But I have to go now, bye\n";
           send(new_socket , greeting , strlen(greeting), 0);
                  
           //add new socket to array of sockets
