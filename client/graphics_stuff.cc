@@ -181,9 +181,9 @@ void drawGame(bitmap* bmp, game_state* game) {
 }
 
 void initGame(game_state* game){
-  game->players[0].pos = vec2d(50, 100);
+  game->players[0].pos = vec2d(50, 350);
   game->players[0].color = {255, 50, 50};
-  game->players[1].pos = vec2d(300, 100);
+  game->players[1].pos = vec2d(740, 350);
   game->players[1].color = {50, 50, 255};
 }
   
