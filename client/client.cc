@@ -144,9 +144,9 @@ int main(int argc , char *argv[])
     bmp.darken(0.92);
     
     // Update bmp based on received game_state information
-		pthread_mutex_lock(&lock);
+    pthread_mutex_lock(&lock);
     drawGame(&bmp, game);
-		pthread_mutex_unlock(&lock);
+    pthread_mutex_unlock(&lock);
     
     // Darken the bitmap instead of clearing it to leave trails
 
@@ -166,7 +166,7 @@ void* read_sockets(void* args){
   //Receive a reply from the server
   while(1){
     if(recv(*socket, &server_reply , sizeof(game_state), 0) < 0){
-      puts("recv failed");
+      perror("recv failed");
     } else {
       pthread_mutex_lock(&lock);
       memcpy(game, &server_reply, sizeof(game_state));
@@ -201,7 +201,7 @@ void* write_sockets(void* args){
         perror("Send failed");
       }
     }
-    sleep_ms(200);
+    sleep_ms(100);
   }
   return NULL;
 }

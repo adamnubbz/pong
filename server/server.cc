@@ -31,6 +31,7 @@ float y_vel = 0.0015;
 fd_set readfds;
 int max_clients = NUMBER_OF_PLAYERS;
 int client_socket[NUMBER_OF_PLAYERS];
+pthread_mutex_t lock;
 
 typedef struct thread_args {
   int* sockets;
@@ -47,7 +48,7 @@ void* read_sockets(void* args){
   char server_reply[3];
   int* sockets = ((thread_args_t*) args)->sockets;
   int index = ((thread_args_t*) args)->index;
-  vec2d vec = vec2d(0, 0.001);
+  vec2d vec = vec2d(0, 50);
 
   //Recieve messages from clients
   while(1){
@@ -57,21 +58,25 @@ void* read_sockets(void* args){
       printf("what is the server reply? %c\n", server_reply[0]);
       if(server_reply[0] == 'w'){
         if(GAME->players[index].pos.y() > 71){
+          pthread_mutex_lock(&lock);          
           GAME->players[index].pos -= vec;
+          pthread_mutex_unlock(&lock);          
         }
       } else if (server_reply[0] == 's'){
         if(GAME->players[index].pos.y() < 475){
+          pthread_mutex_lock(&lock);         
           GAME->players[index].pos += vec;
+          pthread_mutex_unlock(&lock);          
         }
       } else {
         printf("INVALID\n");
       }
-      for(int i = 0; i < NUMBER_OF_PLAYERS; i++){
-        //send to all sockets
-        if(send(sockets[i], GAME, sizeof(game_state), 0) < 0){
-          perror("Send failed");
-        }
-      }
+      // for(int i = 0; i < NUMBER_OF_PLAYERS; i++){
+      //   //send to all sockets
+      //   if(send(sockets[i], GAME, sizeof(game_state), 0) < 0){
+      //     perror("Send failed");
+      //   }
+      // }
 
     }
     memset(server_reply, 0, 3);
@@ -115,7 +120,8 @@ int main(int argc, char** argv)
   int has_stdin = 0;
   int client_sock;
   int connections = 0;
-  
+
+  pthread_mutex_init(&lock, NULL);  
   struct sockaddr_in address;
   char message[2000];
 
