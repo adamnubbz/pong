@@ -13,6 +13,7 @@
 #include <sys/time.h>
 #include <time.h>
 #include "../structs.hh"
+#include <pthread.h>
 
 #include <SDL.h>
 
@@ -45,6 +46,7 @@ void initScreen(bitmap* bmp);
 game_state* game = (game_state*) malloc(sizeof(game_state));
 rgb32 gray = {100, 100, 100};
 bool running = true;
+pthread_mutex_t lock;
 
 //main
 int main(int argc , char *argv[])
@@ -58,6 +60,8 @@ int main(int argc , char *argv[])
   int server_sd, activity;
   int stdin_sd = fileno(stdin);
   fd_set readfds;
+  
+  pthread_mutex_init(&lock, NULL);
   
   initGame(game);
         
@@ -158,7 +162,9 @@ void* read_sockets(void* args){
     if(recv(*socket, &server_reply , sizeof(game_state), 0) < 0){
       puts("recv failed");
     } else {
+      pthread_mutex_lock(&lock);
       memcpy(game, &server_reply, sizeof(game_state));
+      pthread_mutex_unlock(&lock);
     }
   }
 }

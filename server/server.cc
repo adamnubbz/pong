@@ -45,7 +45,7 @@ void* read_sockets(void* args){
   char server_reply[3];
   int* sockets = ((thread_args_t*) args)->sockets;
   int index = ((thread_args_t*) args)->index;
-  vec2d vec = vec2d(0, 0.01);
+  vec2d vec = vec2d(0, 0.001);
 
   //Recieve messages from clients
   while(1){
@@ -54,10 +54,14 @@ void* read_sockets(void* args){
     } else {
       if(server_reply[0] == 'w'){
         //GAME->players[index].pos = vec2d(GAME->players[index].pos.x(), GAME->players[index].pos.y() + 3) ;
-        GAME->players[index].pos -= vec;
+        if(GAME->players[index].pos.y() > 73){
+          GAME->players[index].pos -= vec;
+        }
       } else if (server_reply[0] == 's'){
         //GAME->players[index].pos = vec2d(GAME->players[index].pos.x(), GAME->players[index].pos.y() - 3);
-        GAME->players[index].pos += vec;
+        if(GAME->players[index].pos.y() < 747){
+          GAME->players[index].pos += vec;
+        }
       } else {
         printf("INVALID\n");
       }
