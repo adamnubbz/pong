@@ -170,17 +170,21 @@ void* write_sockets(void* args){
     // If the up key is pressed, shift up one pixel
     if(keyboard[SDL_SCANCODE_UP]) {
       message[0] = 'w';
+      if(send(socket, message , 3*sizeof(char), 0) < 0){
+        printf("%d\n", socket);
+        perror("Send failed");
+      }
     }
     
     // If the down key is pressed, shift down one pixel
     if(keyboard[SDL_SCANCODE_DOWN]) {
       message[0] = 's';
+      if(send(socket, message , 3*sizeof(char), 0) < 0){
+        printf("%d\n", socket);
+        perror("Send failed");
+      }
     }
-    
-    if(send(socket, message , 3*sizeof(char), 0) < 0){
-      printf("%d\n", socket);
-      perror("Send failed");
-    }
+
   }
   return NULL;
 }
