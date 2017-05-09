@@ -162,8 +162,7 @@ void* read_sockets(void* args){
     if(recv(*socket, &server_reply , sizeof(game_state), 0) < 0){
       puts("recv failed");
     } else {
-      fprintf(stderr, "%s\n", (char*)&server_reply);
-      //memcpy(game, &server_reply, sizeof(game_state));
+      memcpy(game, &server_reply, sizeof(game_state));
     }
   }
 }
