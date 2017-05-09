@@ -129,7 +129,9 @@ int main(int argc , char *argv[])
     FD_SET(socket_desc, &readfds);
     if(socket_desc > max_sd)
       max_sd = socket_desc;
-    
+
+    printf("Paddle 1: %lf, %lf\n", game->players[0].pos.x(), game->players[0].pos.y());
+    printf("Paddle 2: %lf, %lf\n", game->players[1].pos.x(), game->players[1].pos.y());
     // Update bmp based on received game_state information
     drawGame(&bmp, game);
     
