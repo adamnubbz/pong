@@ -28,8 +28,8 @@ typedef struct{
 } thread_args;
 
 // Initial velocity
-int x_vel = 10;
-int y_vel = 15;
+int x_vel = 15;
+int y_vel = 10;
 
 // Paddle size
 #define PADDLE_WIDTH 10
