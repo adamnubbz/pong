@@ -35,6 +35,9 @@ typedef struct thread_args {
   int index;
 } thread_args_t;
 
+
+void initGame(game_state* game);
+
 // THE GAME(state)
 game_state* GAME = (game_state*) malloc(sizeof(game_state));
 
@@ -50,9 +53,9 @@ void* read_sockets(void* args){
       puts("recv failed");
     } else {
       if(server_reply[0] == 'w'){
-        GAME->players[index].pos += vec;
+        GAME->players[index].pos = vec2d(GAME->players[index].pos.x(), GAME->players[index].pos.y() + 3) ;
       } else if (server_reply[0] == 's'){
-        GAME->players[index].pos -= vec;
+        GAME->players[index].pos = vec2d(GAME->players[index].pos.x(), GAME->players[index].pos.y() - 3);
       } else {
         printf("INVALID\n");
       }
@@ -184,6 +187,7 @@ int main(int argc, char** argv)
           if (connections == NUMBER_OF_PLAYERS){
             //scheduler_init();//start scheduler
             printf("Hello, game start!\n");
+            initGame(GAME);
             pthread_t threads[NUMBER_OF_PLAYERS];
             thread_args_t args[NUMBER_OF_PLAYERS];
             for(int j = 0; j < NUMBER_OF_PLAYERS; j++){
@@ -207,5 +211,12 @@ int main(int argc, char** argv)
   sleep(3);
   //endwin();
   return 0;
+}
+
+void initGame(game_state* game){
+  game->players[0].pos = vec2d(50, 350);
+  game->players[0].color = {255, 50, 50};
+  game->players[1].pos = vec2d(740, 350);
+  game->players[1].color = {50, 50, 255};
 }
 
