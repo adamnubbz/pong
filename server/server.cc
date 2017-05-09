@@ -71,12 +71,12 @@ void* read_sockets(void* args){
       } else {
         printf("INVALID\n");
       }
-      // for(int i = 0; i < NUMBER_OF_PLAYERS; i++){
-      //   //send to all sockets
-      //   if(send(sockets[i], GAME, sizeof(game_state), 0) < 0){
-      //     perror("Send failed");
-      //   }
-      // }
+      for(int i = 0; i < NUMBER_OF_PLAYERS; i++){
+        //send to all sockets
+        if(send(sockets[i], GAME, sizeof(game_state), 0) < 0){
+          perror("Send failed");
+        }
+      }
 
     }
     memset(server_reply, 0, 3);
