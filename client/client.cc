@@ -201,7 +201,7 @@ void* write_sockets(void* args){
         perror("Send failed");
       }
     }
-    sleep(0.2);
+    sleep_ms(200);
   }
   return NULL;
 }
