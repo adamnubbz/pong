@@ -112,13 +112,23 @@ int main(int argc , char *argv[])
     SDL_Event event;
     while(SDL_PollEvent(&event) == 1) {
       // If the event is a quit event, then leave the loop
-      if(event.type == SDL_QUIT) running = false;
+      if(event.type == SDL_QUIT){
+        running = false;
+      }
     }
     
     // Get the keyboard state
     const uint8_t* keyboard = SDL_GetKeyboardState(NULL);
 
     FD_ZERO(&readfds);
+
+    //Add stdin
+    FD_SET(stdin_sd, &readfds);
+    max_sd = stdin_sd;
+
+    FD_SET(socket_desc, &readfds);
+    if(socket_desc > max_sd)
+      max_sd = socket_desc;
     
     // Update bmp based on received game_state information
     drawGame(&bmp, game);
@@ -132,12 +142,12 @@ int main(int argc , char *argv[])
 
   if(pthread_join(threads[0], NULL) != 0) {
     perror("Error joining with thread 1");
-    exit(2);
+    exit(1);
   }
 
   if(pthread_join(threads[1], NULL) != 0) {
-    perror("Error joining with thread 1");
-    exit(2);
+    perror("Error joining with thread 2");
+    exit(1);
   }
   return 0;
 }
@@ -207,13 +217,13 @@ void drawGame(bitmap* bmp, game_state* game) {
   
   // Draw the paddles
   for(int i = 0; i < 2; i++){
-    float x = game->players[i].pos.x();
-    float max_x_coord = x + PADDLE_WIDTH;
-    for(float x_coord = x; x_coord < max_x_coord; x_coord++){
-      float y = game->players[i].pos.y();
-      float max_y_coord = y + PADDLE_HEIGHT;
-      for(float y_coord = y; y_coord < max_y_coord; y_coord++){
-        bmp->set(x_coord, y_coord, /*game->players[i].color*/{255, 255, 255});
+    float x_coord = game->players[i].pos.x();
+    float max_x_coord = x_coord + PADDLE_WIDTH;
+    for(; x_coord < max_x_coord; x_coord++){
+      float y_coord = game->players[i].pos.y();
+      float max_y_coord = y_coord + PADDLE_HEIGHT;
+      for(; y_coord < max_y_coord; y_coord++){
+        bmp->set(x_coord, y_coord, game->players[i].color);
       }
     }
   }
