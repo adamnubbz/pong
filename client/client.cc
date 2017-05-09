@@ -141,13 +141,15 @@ int main(int argc , char *argv[])
     if(socket_desc > max_sd)
       max_sd = socket_desc;
 
+    bmp.darken(0.92);
+    
     // Update bmp based on received game_state information
 		pthread_mutex_lock(&lock);
     drawGame(&bmp, game);
 		pthread_mutex_unlock(&lock);
     
     // Darken the bitmap instead of clearing it to leave trails
-    bmp.darken(0.92);
+
     
     // Display the rendered frame
     ui.display(bmp);
