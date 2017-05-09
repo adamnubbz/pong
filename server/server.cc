@@ -167,9 +167,6 @@ int main(int argc, char** argv)
           //inform user of socket number - used in send and receive commands
           printf("Player connected , socket fd is %d , ip is : %s , port : %d \n" , new_socket , inet_ntoa(address.sin_addr) , ntohs(address.sin_port));
           connections++;
-          //Reply to the client
-          char greeting[] = "Hello Client , I have received your connection. But I have to go now, bye\n";
-          send(new_socket , greeting , strlen(greeting), 0);
                  
           //add new socket to array of sockets
           for (i = 0; i < max_clients; i++) 

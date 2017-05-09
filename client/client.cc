@@ -92,17 +92,21 @@ int main(int argc , char *argv[])
   bitmap bmp(WIDTH, HEIGHT);
 
   pthread_t threads[2];
-	thread_args* t_args = (thread_args*) malloc(sizeof(thread_args));
-	t_args->socket = socket_desc;
-	//assign message here
-	
+  thread_args* t_args = (thread_args*) malloc(sizeof(thread_args));
+  t_args->socket = socket_desc;
+  //assign message here
 
-
-  if(pthread_create(&threads[1], NULL, write_sockets, &t_args) != 0){
+  printf("%d\n", socket_desc);
+  if(pthread_create(&threads[1], NULL, write_sockets, t_args) != 0){
     perror("Error creating thread 2");
     exit(2);
   }
 
+  if(pthread_create(&threads[0], NULL, read_sockets, &socket_desc) != 0){
+    perror("Error creating thread 1");
+    exit(2);
+  }
+  
   while(running) {
     // Process events
     SDL_Event event;
@@ -115,29 +119,7 @@ int main(int argc , char *argv[])
     const uint8_t* keyboard = SDL_GetKeyboardState(NULL);
 
     FD_ZERO(&readfds);
-      
-    //Add stdin
-    FD_SET(stdin_sd, &readfds);
-    max_sd = stdin_sd;
-
-    FD_SET(socket_desc, &readfds);
-    if(socket_desc > max_sd)
-      max_sd = socket_desc;
     
-    // send keystroke information to server, receive updated game_state from
-    // server (server does the updating)
-    if(pthread_create(&threads[0], NULL, read_sockets, &socket_desc) != 0){
-      perror("Error creating thread 1");
-      exit(2);
-    }
-    
-
-    // Charlie, how do I receive a game_state from the server? Aka, how do
-    // I receive the array, parse it, and update the game_state for the client
-
-    // will probably need something of the form:
-    //game = recv(*socket, receivedmessage, sizeof(receivedmessage),0);
-
     // Update bmp based on received game_state information
     drawGame(&bmp, game);
     
@@ -156,7 +138,7 @@ int main(int argc , char *argv[])
   if(pthread_join(threads[1], NULL) != 0) {
     perror("Error joining with thread 1");
     exit(2);
-  }  
+  }
   return 0;
 }
 
@@ -170,7 +152,8 @@ void* read_sockets(void* args){
     if(recv(*socket, &server_reply , sizeof(game_state), 0) < 0){
       puts("recv failed");
     } else {
-      memcpy(game, &server_reply, sizeof(game_state));
+      fprintf(stderr, "%s\n", (char*)&server_reply);
+      //memcpy(game, &server_reply, sizeof(game_state));
     }
   }
 }
@@ -179,8 +162,25 @@ void* write_sockets(void* args){
   int socket = ((thread_args*)args)->socket;
   char* message = ((thread_args*)args)->message;
   //Send some data
-  if(send(socket, message , 3*sizeof(char), 0) < 0){
-    perror("Send failed");
+  while(running){
+    
+    // Get the keyboard state
+    const uint8_t* keyboard = SDL_GetKeyboardState(NULL);
+    
+    // If the up key is pressed, shift up one pixel
+    if(keyboard[SDL_SCANCODE_UP]) {
+      message[0] = 'w';
+    }
+    
+    // If the down key is pressed, shift down one pixel
+    if(keyboard[SDL_SCANCODE_DOWN]) {
+      message[0] = 's';
+    }
+    
+    if(send(socket, message , 3*sizeof(char), 0) < 0){
+      printf("%d\n", socket);
+      perror("Send failed");
+    }
   }
   return NULL;
 }
@@ -202,16 +202,14 @@ void drawGame(bitmap* bmp, game_state* game) {
   }
   
   // Draw the paddles
-  int i = 0;
-  for(; i < 2; i++){
-    rgb32 color = game->players[i].color;
-    float x_coord = game->players[i].pos.x();
-    float max_x_coord = x_coord + PADDLE_WIDTH;
-    for(; x_coord < max_x_coord; x_coord++){
-      float y_coord = game->players[i].pos.y();
-      float max_y_coord = y_coord + PADDLE_HEIGHT;
-      for(; y_coord < max_y_coord; y_coord++){
-        bmp->set(x_coord, y_coord, color);
+  for(int i = 0; i < 2; i++){
+    float x = game->players[i].pos.x();
+    float max_x_coord = x + PADDLE_WIDTH;
+    for(float x_coord = x; x_coord < max_x_coord; x_coord++){
+      float y = game->players[i].pos.y();
+      float max_y_coord = y + PADDLE_HEIGHT;
+      for(float y_coord = y; y_coord < max_y_coord; y_coord++){
+        bmp->set(x_coord, y_coord, /*game->players[i].color*/{255, 255, 255});
       }
     }
   }
@@ -246,4 +244,32 @@ void initGame(game_state* game){
   game->players[1].color = {50, 50, 255};
 }
   
-  
+/*
+char read_input(int socket) {
+  int key = getch();
+  char key_ts;
+  int is_valid_key = 0;
+  if(key == KEY_UP) {
+    key_ts = 'w';
+    is_valid_key = 1;
+  } else if(key == KEY_RIGHT) {
+    key_ts = 'd';
+    is_valid_key = 1;
+  } else if(key == KEY_DOWN) {
+    key_ts = 's';
+    is_valid_key = 1;
+  } else if(key == KEY_LEFT) {
+    key_ts = 'a';
+    is_valid_key = 1;
+  } else if(key == 'q') {
+    key_ts = 'q';
+    is_valid_key = 1;
+  }
+
+  if(is_valid_key == 1){
+    return key_ts;
+  }
+  else
+    return -50;
+}//read_input
+*/
