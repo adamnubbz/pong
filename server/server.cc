@@ -25,6 +25,8 @@
 #define PORT 8888
 
 int running = 1;
+float x_vel = 0.001;
+float y_vel = 0.0015;
 
 fd_set readfds;
 int max_clients = NUMBER_OF_PLAYERS;
@@ -53,12 +55,10 @@ void* read_sockets(void* args){
       puts("recv failed");
     } else {
       if(server_reply[0] == 'w'){
-        //GAME->players[index].pos = vec2d(GAME->players[index].pos.x(), GAME->players[index].pos.y() + 3) ;
         if(GAME->players[index].pos.y() > 71){
           GAME->players[index].pos -= vec;
         }
       } else if (server_reply[0] == 's'){
-        //GAME->players[index].pos = vec2d(GAME->players[index].pos.x(), GAME->players[index].pos.y() - 3);
         if(GAME->players[index].pos.y() < 475){
           GAME->players[index].pos += vec;
         }
@@ -71,12 +71,38 @@ void* read_sockets(void* args){
           perror("Send failed");
         }
       }
+
     }
     memset(server_reply, 0, 3);
   }
 }
 
-
+void* write_sockets(void* args){
+  int* sockets = (int*)args;
+  //Send some data
+  while(1){
+    if(GAME->ball.pos.y() <= 76 || GAME->ball.pos.y() >= 520){
+      y_vel *= -1;
+    }
+    if((GAME->ball.pos.x() <= 65 && GAME->players[0].pos.y() - GAME->ball.pos.y() <= 50) || (GAME->ball.pos.x() >= 735 && GAME->players[1].pos.y() - GAME->ball.pos.y() <= 50)){
+      x_vel *= -1;
+    }
+    if(GAME->ball.pos.x() > 800 || GAME->ball.pos.x() < 0){
+      vec2d mid = vec2d(400,300);
+      GAME->ball.pos *= 0;
+      GAME->ball.pos += mid;
+    }
+    vec2d ball = vec2d(x_vel, y_vel);
+    GAME->ball.pos += ball;
+    for(int i = 0; i < NUMBER_OF_PLAYERS; i++){
+      //send to all sockets
+      if(send(sockets[i], GAME, sizeof(game_state), 0) < 0){
+        perror("Send failed");
+      }
+    }
+  }
+  return NULL;
+}
 
 int main(int argc, char** argv)
 {
@@ -195,6 +221,7 @@ int main(int argc, char** argv)
             printf("Hello, game start!\n");
             initGame(GAME);
             pthread_t threads[NUMBER_OF_PLAYERS];
+            pthread_t write_thread;
             thread_args_t args[NUMBER_OF_PLAYERS];
             for(int j = 0; j < NUMBER_OF_PLAYERS; j++){
               args[j].sockets = client_socket;
@@ -204,12 +231,16 @@ int main(int argc, char** argv)
                 exit(2);
               }
             }
+            if(pthread_create(&write_thread, NULL, write_sockets, (void*)client_socket) != 0){
+              perror("Error creating write thread");
+              exit(2);
+            }
             for(int j = 0; j < NUMBER_OF_PLAYERS; j++){
               if(pthread_join(threads[j], NULL) != 0) {
                 perror("Error joining with thread");
                 exit(2);
               }
-            } 
+            }
           }
         }
     }
@@ -224,5 +255,7 @@ void initGame(game_state* game){
   game->players[0].color = {255, 50, 50};
   game->players[1].pos = vec2d(740, 350);
   game->players[1].color = {50, 50, 255};
+  game->ball.radius = 5.0;
+  game->ball.pos = vec2d(400,300);
+  game->ball.color = {255, 255, 255};
 }
-

@@ -27,6 +27,10 @@ typedef struct{
 	char message[3];
 } thread_args;
 
+// Initial velocity
+int x_vel = 10;
+int y_vel = 15;
+
 // Paddle size
 #define PADDLE_WIDTH 10
 #define PADDLE_HEIGHT 50
@@ -137,8 +141,6 @@ int main(int argc , char *argv[])
     if(socket_desc > max_sd)
       max_sd = socket_desc;
 
-    printf("Paddle 1: %lf, %lf\n", game->players[0].pos.x(), game->players[0].pos.y());
-    printf("Paddle 2: %lf, %lf\n", game->players[1].pos.x(), game->players[1].pos.y());
     // Update bmp based on received game_state information
     drawGame(&bmp, game);
     
@@ -256,36 +258,6 @@ void initGame(game_state* game){
   game->ball.color = {255, 255, 255};
 }
   
-/*
-char read_input(int socket) {
-  int key = getch();
-  char key_ts;
-  int is_valid_key = 0;
-  if(key == KEY_UP) {
-    key_ts = 'w';
-    is_valid_key = 1;
-  } else if(key == KEY_RIGHT) {
-    key_ts = 'd';
-    is_valid_key = 1;
-  } else if(key == KEY_DOWN) {
-    key_ts = 's';
-    is_valid_key = 1;
-  } else if(key == KEY_LEFT) {
-    key_ts = 'a';
-    is_valid_key = 1;
-  } else if(key == 'q') {
-    key_ts = 'q';
-    is_valid_key = 1;
-  }
-
-  if(is_valid_key == 1){
-    return key_ts;
-  }
-  else
-    return -50;
-}//read_input
-*/
-
 void initScreen(bitmap* bmp){
   for(float x = 0; x < WIDTH; x++){
     for(float y = 0; y < HEIGHT; y++){
