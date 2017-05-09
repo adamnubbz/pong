@@ -129,7 +129,7 @@ int main(int argc , char *argv[])
     }
     
     // Get the keyboard state
-    const uint8_t* keyboard = SDL_GetKeyboardState(NULL);
+    const uint8_t* keyboard = SDL_GetKeyboardState(NULL);/
 
     FD_ZERO(&readfds);
 
@@ -142,7 +142,9 @@ int main(int argc , char *argv[])
       max_sd = socket_desc;
 
     // Update bmp based on received game_state information
+		pthread_mutex_lock(&lock);
     drawGame(&bmp, game);
+		pthread_mutex_unlock(&lock);
     
     // Darken the bitmap instead of clearing it to leave trails
     bmp.darken(0.92);
@@ -204,6 +206,13 @@ void* write_sockets(void* args){
 
 void drawGame(bitmap* bmp, game_state* game) {
   
+  // Draw the borders
+  for(float y = 50; y < 70; y++){
+    for(float x = 50; x < 750; x++){
+      bmp->set(x, y, gray);
+      bmp->set(x, (y + 475), gray);
+    }
+  }
   // Draw the paddles
   for(int i = 0; i < 2; i++){
     float x_coord = game->players[i].pos.x();
@@ -254,14 +263,6 @@ void initScreen(bitmap* bmp){
   for(float x = 0; x < WIDTH; x++){
     for(float y = 0; y < HEIGHT; y++){
         bmp->set(x, y, {0, 0, 0});
-    }
-  }
-
-  // Draw the borders
-  for(float y = 50; y < 70; y++){
-    for(float x = 50; x < 750; x++){
-      bmp->set(x, y, gray);
-      bmp->set(x, (y + 475), gray);
     }
   }
 }

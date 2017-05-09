@@ -84,10 +84,10 @@ void* write_sockets(void* args){
     if(GAME->ball.pos.y() <= 76 || GAME->ball.pos.y() >= 520){
       y_vel *= -1;
     }
-    if((GAME->ball.pos.x() <= 65 && GAME->players[0].pos.y() - GAME->ball.pos.y() - 25 <= abs(25)) || (GAME->ball.pos.x() >= 735 && GAME->players[1].pos.y() - GAME->ball.pos.y() - 25 <= abs(25))){
+    if((GAME->ball.pos.x() <= 65 && std::abs(GAME->players[0].pos.y() - GAME->ball.pos.y() + 25) <= 25) || (GAME->ball.pos.x() >= 735 && std::abs(GAME->players[1].pos.y() - GAME->ball.pos.y() + 25) <= 25)){
       x_vel *= -1;
     }
-    if(GAME->ball.pos.x() > 735 || GAME->ball.pos.x() < 65){
+    if(GAME->ball.pos.x() > 750 || GAME->ball.pos.x() < 50){
       vec2d mid = vec2d(400,300);
       GAME->ball.pos *= 0;
       GAME->ball.pos += mid;
