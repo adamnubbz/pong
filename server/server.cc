@@ -54,6 +54,7 @@ void* read_sockets(void* args){
     if(recv(sockets[index], server_reply , sizeof(char) * 3, 0) < 0){
       puts("recv failed");
     } else {
+      printf("what is the server reply? %c\n", server_reply[0]);
       if(server_reply[0] == 'w'){
         if(GAME->players[index].pos.y() > 71){
           GAME->players[index].pos -= vec;
