@@ -129,7 +129,7 @@ int main(int argc , char *argv[])
     }
     
     // Get the keyboard state
-    const uint8_t* keyboard = SDL_GetKeyboardState(NULL);/
+    const uint8_t* keyboard = SDL_GetKeyboardState(NULL);
 
     FD_ZERO(&readfds);
 
