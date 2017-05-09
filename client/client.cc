@@ -39,6 +39,7 @@ void drawGame(bitmap* bmp, game_state* game);
 char read_input(int socket);
 void* read_sockets(void* args);
 void* write_sockets(void* args);
+void initScreen(bitmap* bmp);
 
 
 game_state* game = (game_state*) malloc(sizeof(game_state));
@@ -106,6 +107,8 @@ int main(int argc , char *argv[])
     perror("Error creating thread 1");
     exit(2);
   }
+
+  initScreen(&bmp);
   
   while(running) {
     // Process events
@@ -142,15 +145,6 @@ int main(int argc , char *argv[])
     ui.display(bmp);
   }
 
-  if(pthread_join(threads[0], NULL) != 0) {
-    perror("Error joining with thread 1");
-    exit(1);
-  }
-
-  if(pthread_join(threads[1], NULL) != 0) {
-    perror("Error joining with thread 2");
-    exit(1);
-  }
   return 0;
 }
 
@@ -164,7 +158,7 @@ void* read_sockets(void* args){
     if(recv(*socket, &server_reply , sizeof(game_state), 0) < 0){
       puts("recv failed");
     } else {
-      game = &server_reply;
+      memcpy(game, &server_reply, sizeof(game_state));
     }
   }
 }
@@ -201,13 +195,7 @@ void* write_sockets(void* args){
 }
 
 void drawGame(bitmap* bmp, game_state* game) {
-  for(float x = 0; x < WIDTH; x++){
-    for(float y = 0; y < HEIGHT; y++){
-        bmp->set(x, y, {0, 0, 0});
-    }
-  }
-      
-  
+    
   // Draw the borders
   for(float y = 50; y < 70; y++){
     for(float x = 50; x < 750; x++){
@@ -288,3 +276,11 @@ char read_input(int socket) {
     return -50;
 }//read_input
 */
+
+void initScreen(bitmap* bmp){
+  for(float x = 0; x < WIDTH; x++){
+    for(float y = 0; y < HEIGHT; y++){
+        bmp->set(x, y, {0, 0, 0});
+    }
+  }
+}
