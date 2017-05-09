@@ -222,12 +222,12 @@ void drawGame(bitmap* bmp, game_state* game) {
       }
     }
   }
-  /*
+  
   // Draw the ball
-  float center_x = game.ball.pos.x();
-  float center_y = game.ball.pos.y();
-  float radius = game.ball.radius();
-  rgb32 color = game.ball.col;
+  float center_x = game->ball.pos.x();
+  float center_y = game->ball.pos.y();
+  float radius = game->ball.radius;
+  rgb32 color = game->ball.color;
   
   // Loop over points in the upper-right quadrant of the circle
   for(float x = 0; x <= radius*1.1; x++) {
@@ -236,14 +236,14 @@ void drawGame(bitmap* bmp, game_state* game) {
       float dist = sqrt(pow(x, 2) + pow(y, 2));
       if(dist < radius) {
         // Set this point, along with the mirrored points in the other three quadrants
-        bmp->set(center_x + x + x_offset, center_y + y + y_offset, color);
-        bmp->set(center_x + x + x_offset, center_y - y + y_offset, color);
-        bmp->set(center_x - x + x_offset, center_y - y + y_offset, color);
-        bmp->set(center_x - x + x_offset, center_y + y + y_offset, color);
+        bmp->set(center_x + x, center_y + y, color);
+        bmp->set(center_x + x, center_y - y, color);
+        bmp->set(center_x - x, center_y - y, color);
+        bmp->set(center_x - x, center_y + y, color);
       }
     }
   }
-  */
+  
 }
 
 void initGame(game_state* game){
@@ -251,6 +251,7 @@ void initGame(game_state* game){
   game->players[0].color = {255, 50, 50};
   game->players[1].pos = vec2d(740, 350);
   game->players[1].color = {50, 50, 255};
+  game->ball.radius = 5.0;
 }
   
 /*

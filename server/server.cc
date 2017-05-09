@@ -54,12 +54,12 @@ void* read_sockets(void* args){
     } else {
       if(server_reply[0] == 'w'){
         //GAME->players[index].pos = vec2d(GAME->players[index].pos.x(), GAME->players[index].pos.y() + 3) ;
-        if(GAME->players[index].pos.y() > 73){
+        if(GAME->players[index].pos.y() > 70){
           GAME->players[index].pos -= vec;
         }
       } else if (server_reply[0] == 's'){
         //GAME->players[index].pos = vec2d(GAME->players[index].pos.x(), GAME->players[index].pos.y() - 3);
-        if(GAME->players[index].pos.y() < 747){
+        if(GAME->players[index].pos.y() < 475){
           GAME->players[index].pos += vec;
         }
       } else {

@@ -32,7 +32,7 @@ typedef struct{
 	vec2d pos;
 	vec2d dir;
 	float radius;
-	rgb32 col;
+	rgb32 color;
 } ball_info;
 
 typedef struct{
