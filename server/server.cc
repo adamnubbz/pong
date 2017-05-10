@@ -48,7 +48,7 @@ void* read_sockets(void* args){
   char server_reply[3];
   int* sockets = ((thread_args_t*) args)->sockets;
   int index = ((thread_args_t*) args)->index;
-  vec2d vec = vec2d(0, 25);
+  vec2d vec = vec2d(0, 20);
 
   //Recieve messages from clients
   while(1){
