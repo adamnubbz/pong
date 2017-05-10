@@ -48,14 +48,13 @@ void* read_sockets(void* args){
   char server_reply[3];
   int* sockets = ((thread_args_t*) args)->sockets;
   int index = ((thread_args_t*) args)->index;
-  vec2d vec = vec2d(0, 50);
+  vec2d vec = vec2d(0, 25);
 
   //Recieve messages from clients
   while(1){
     if(recv(sockets[index], server_reply , sizeof(char) * 3, 0) < 0){
       puts("recv failed");
     } else {
-      printf("what is the server reply? %c\n", server_reply[0]);
       if(server_reply[0] == 'w'){
         if(GAME->players[index].pos.y() > 71){
           pthread_mutex_lock(&lock);          
