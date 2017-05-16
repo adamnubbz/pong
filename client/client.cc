@@ -34,6 +34,7 @@ int y_vel = 10;
 // Start and stop
 size_t start;
 size_t end;
+bool user_press = false;
 
 // Paddle size
 #define PADDLE_WIDTH 10
@@ -172,8 +173,11 @@ void* read_sockets(void* args){
     if(recv(*socket, &server_reply , sizeof(game_state), 0) < 0){
       perror("recv failed");
     } else {
-			end = time_ms();
-			printf("%d is the time\n", (int)(end - start));
+			if (user_press){
+				end = time_ms();
+				printf("%d is the time\n", (int)(end - start));
+				user_press = false;
+			}
       pthread_mutex_lock(&lock);
       memcpy(game, &server_reply, sizeof(game_state));
       pthread_mutex_unlock(&lock);
@@ -194,6 +198,7 @@ void* write_sockets(void* args){
     if(keyboard[SDL_SCANCODE_UP]) {
       message[0] = 'w';
 			start = time_ms();
+			user_press = true;
       if(send(socket, message , 3*sizeof(char), 0) < 0){
         printf("%d\n", socket);
         perror("Send failed");
@@ -204,6 +209,7 @@ void* write_sockets(void* args){
     if(keyboard[SDL_SCANCODE_DOWN]) {
       message[0] = 's';
 			start = time_ms();
+			user_press = true;
       if(send(socket, message , 3*sizeof(char), 0) < 0){
         printf("%d\n", socket);
         perror("Send failed");
